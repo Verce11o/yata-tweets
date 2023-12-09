@@ -1,0 +1,23 @@
+postgres:
+  PostgresqlHost: localhost
+  PostgresqlPort: 5432
+  PostgresqlUser: postgres
+  PostgresqlPassword: password
+  PostgresqlDbname: database
+
+redis:
+  RedisHost: localhost
+  RedisPort: 6379
+  RedisUser:
+  RedisPassword:
+  RedisDB: 0
+
+minio:
+  Endpoint: 127.0.0.1:9000
+  MinioAccessKey: minioadmin
+  MinioSecretKey: minioadmin
+  UseSSL: false
+
+app:
+  port: 3999
+
