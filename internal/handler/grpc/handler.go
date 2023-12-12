@@ -23,7 +23,6 @@ func NewTweetGRPC(log *zap.SugaredLogger, tracer trace.Tracer, service service.T
 }
 
 func (t *TweetGRPC) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest) (*pb.CreateTweetResponse, error) {
-	t.log.Info(ctx.Value)
 	ctx, span := t.tracer.Start(ctx, "CreateTweet")
 	defer span.End()
 
@@ -48,21 +47,27 @@ func (t *TweetGRPC) GetTweet(ctx context.Context, input *pb.GetTweetRequest) (*p
 		return nil, status.Errorf(grpc_errors.ParseGRPCErrStatusCode(err), "GetTweet: %v", err)
 	}
 
-	tweetImage := &pb.Image{}
-
-	if tweet.ImageName != "" {
-		tweetImage, err = t.service.GetTweetImage(ctx, tweet.ImageName)
-		if err != nil {
-			t.log.Errorf("GetTweet: %v", err.Error())
-		}
-	}
 	return &pb.Tweet{
-		UserId:  tweet.UserID.String(),
-		TweetId: tweet.TweetID.String(),
-		Text:    tweet.Text,
-		Image:   tweetImage,
+		UserId:   tweet.UserID.String(),
+		TweetId:  tweet.TweetID.String(),
+		Text:     tweet.Text,
+		ImageUrl: &tweet.ImageURL,
 	}, nil
 
+}
+
+func (t *TweetGRPC) GetAllTweets(ctx context.Context, input *pb.GetAllTweetsRequest) (*pb.GetAllTweetsResponse, error) {
+	ctx, span := t.tracer.Start(ctx, "GRPC.GetAllTweets")
+	defer span.End()
+
+	tweets, nextCursor, err := t.service.GetAllTweets(ctx, input)
+
+	if err != nil {
+		t.log.Errorf("GetAllTweets: %v", err.Error())
+		return nil, status.Errorf(grpc_errors.ParseGRPCErrStatusCode(err), "GetAllTweets: %v", err)
+	}
+
+	return &pb.GetAllTweetsResponse{Tweets: tweets, Cursor: nextCursor}, nil
 }
 
 func (t *TweetGRPC) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest) (*pb.Tweet, error) {
@@ -76,20 +81,11 @@ func (t *TweetGRPC) UpdateTweet(ctx context.Context, input *pb.UpdateTweetReques
 		return nil, status.Errorf(grpc_errors.ParseGRPCErrStatusCode(err), "UpdateTweet: %v", err)
 	}
 
-	tweetImage := &pb.Image{}
-	if tweet.ImageName != "" {
-		tweetImage, err = t.service.GetTweetImage(ctx, tweet.ImageName)
-
-		if err != nil {
-			t.log.Errorf("GetTweet: %v", err.Error())
-		}
-	}
-
 	return &pb.Tweet{
-		UserId:  tweet.UserID.String(),
-		TweetId: tweet.TweetID.String(),
-		Text:    tweet.Text,
-		Image:   tweetImage,
+		UserId:   tweet.UserID.String(),
+		TweetId:  tweet.TweetID.String(),
+		Text:     tweet.Text,
+		ImageUrl: &tweet.ImageURL,
 	}, nil
 
 }

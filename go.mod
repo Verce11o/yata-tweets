@@ -3,7 +3,7 @@ module github.com/Verce11o/yata-tweets
 go 1.21.3
 
 require (
-	github.com/Verce11o/yata-protos v0.0.0-20231210164223-7bcc37d20149
+	github.com/Verce11o/yata-protos v0.0.0-20231212182136-a02282d61eeb
 	github.com/google/uuid v1.4.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.3.5

@@ -28,9 +28,12 @@ func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetReq
 
 	image := input.GetImage()
 
+	var imageUrl string
+	var err error
+
 	if image != nil {
 
-		err := t.minio.AddTweetImage(ctx, image, image.GetName())
+		imageUrl, err = t.minio.AddTweetImage(ctx, image, image.GetName())
 
 		if err != nil {
 			t.log.Errorf("cannot add image to tweet in minio: %v", err.Error())
@@ -38,7 +41,7 @@ func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetReq
 
 	}
 
-	tweetID, err := t.repo.CreateTweet(ctx, input, image.GetName())
+	tweetID, err := t.repo.CreateTweet(ctx, input, image.GetName(), imageUrl)
 
 	if err != nil {
 		return "", err
@@ -77,21 +80,32 @@ func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.Twe
 
 }
 
-func (t *TweetService) GetTweetImage(ctx context.Context, imageName string) (*pb.Image, error) {
+func (t *TweetService) GetTweetImage(ctx context.Context, imageName string) (string, error) {
 	ctx, span := t.tracer.Start(ctx, "tweetService.GetTweetImage")
 	defer span.End()
 
-	image, contentType, err := t.minio.GetTweetImage(ctx, imageName)
+	imageURL, err := t.minio.GetTweetImage(ctx, imageName)
 
 	if err != nil {
 		t.log.Errorf("cannot get tweet image by id in minio: %v", err.Error())
-		return &pb.Image{}, err
+		return "", err
 	}
 
-	return &pb.Image{
-		Chunk:       image,
-		ContentType: contentType,
-	}, nil
+	return imageURL, nil
+
+}
+
+func (t *TweetService) GetAllTweets(ctx context.Context, input *pb.GetAllTweetsRequest) ([]*pb.Tweet, string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetService.GetAllTweets")
+	defer span.End()
+
+	tweets, nextCursor, err := t.repo.GetAllTweets(ctx, input.GetCursor())
+
+	if err != nil {
+		t.log.Errorf("cannot get all tweets by cursor: %v err: %v", input.GetCursor(), err)
+	}
+
+	return tweets, nextCursor, nil
 
 }
 
@@ -122,7 +136,7 @@ func (t *TweetService) UpdateTweet(ctx context.Context, input *pb.UpdateTweetReq
 			return nil, err
 		}
 
-		err = t.minio.AddTweetImage(ctx, image, image.GetName())
+		_, err = t.minio.AddTweetImage(ctx, image, image.GetName())
 		if err != nil {
 			t.log.Errorf("cannot replace tweet image: %v", err.Error())
 			return nil, err
@@ -131,9 +145,17 @@ func (t *TweetService) UpdateTweet(ctx context.Context, input *pb.UpdateTweetReq
 		newImageName = image.GetName()
 	}
 
-	newTweet, err := t.repo.UpdateTweet(ctx, input, newImageName)
+	imageURL, err := t.minio.GetTweetImage(ctx, newImageName)
 
 	if err != nil {
+		t.log.Errorf("cannot get image url: %v", err.Error())
+		return nil, err
+	}
+
+	newTweet, err := t.repo.UpdateTweet(ctx, input, newImageName, imageURL)
+
+	if err != nil {
+		t.log.Errorf("cannot update tweet: %v", err.Error())
 		return nil, err
 	}
 

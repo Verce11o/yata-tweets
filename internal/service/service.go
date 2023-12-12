@@ -9,7 +9,8 @@ import (
 type Tweet interface {
 	CreateTweet(ctx context.Context, input *pb.CreateTweetRequest) (string, error)
 	GetTweet(ctx context.Context, tweetID string) (domain.Tweet, error)
-	GetTweetImage(ctx context.Context, imageName string) (*pb.Image, error)
+	GetTweetImage(ctx context.Context, imageName string) (string, error)
+	GetAllTweets(ctx context.Context, input *pb.GetAllTweetsRequest) ([]*pb.Tweet, string, error)
 	UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest) (*domain.Tweet, error)
 	DeleteTweet(ctx context.Context, input *pb.DeleteTweetRequest) error
 }

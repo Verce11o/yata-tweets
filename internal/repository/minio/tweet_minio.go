@@ -5,22 +5,28 @@ import (
 	"context"
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/minio/minio-go/v7"
-	"io"
+	"go.opentelemetry.io/otel/trace"
+	"net/url"
+	"time"
 )
 
 const (
-	userTweetsName = "user-tweets"
+	userTweetsName  = "user-tweets"
+	imageExpireTime = time.Hour * 24
 )
 
 type TweetMinio struct {
-	minio *minio.Client
+	minio  *minio.Client
+	tracer trace.Tracer
 }
 
-func NewTweetMinio(minio *minio.Client) *TweetMinio {
-	return &TweetMinio{minio: minio}
+func NewTweetMinio(minio *minio.Client, tracer trace.Tracer) *TweetMinio {
+	return &TweetMinio{minio: minio, tracer: tracer}
 }
 
-func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileName string) error {
+func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileName string) (string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetMinio.AddImage")
+	defer span.End()
 
 	reader := bytes.NewReader(image.GetChunk())
 
@@ -32,58 +38,62 @@ func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileNam
 		reader.Size(),
 		minio.PutObjectOptions{ContentType: image.GetContentType()},
 	)
-
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	u, err := t.minio.PresignedGetObject(ctx, userTweetsName, fileName, imageExpireTime, url.Values{})
+
+	if err != nil {
+		return "", err
+	}
+
+	return u.String(), nil
 }
 
-func (t *TweetMinio) GetTweetImage(ctx context.Context, fileName string) ([]byte, string, error) {
-	file, err := t.minio.GetObject(ctx, userTweetsName, fileName, minio.GetObjectOptions{})
+// GetTweetImage returns image url on minio
+func (t *TweetMinio) GetTweetImage(ctx context.Context, fileName string) (string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetMinio.GetImage")
+	defer span.End()
+
+	u, err := t.minio.PresignedGetObject(ctx, userTweetsName, fileName, imageExpireTime, url.Values{})
 
 	if err != nil {
-		return nil, "", err
+		return "", err
 	}
 
-	chunk, err := io.ReadAll(file)
-
-	if err != nil {
-		return nil, "", err
-	}
-	objectInfo, err := t.minio.StatObject(ctx, userTweetsName, fileName, minio.StatObjectOptions{})
-
-	if err != nil {
-		return nil, "", err
-	}
-
-	return chunk, objectInfo.ContentType, nil
+	return u.String(), nil
 }
 
-func (t *TweetMinio) UpdateTweetImage(ctx context.Context, oldName string, newName string) error {
-	copyDestOpts := minio.CopyDestOptions{
-		Bucket: userTweetsName,
-		Object: newName,
-	}
-
-	copySrcOpts := minio.CopySrcOptions{
-		Bucket: userTweetsName,
-		Object: oldName,
-	}
-
-	if _, err := t.minio.CopyObject(ctx, copyDestOpts, copySrcOpts); err != nil {
-		return err
-	}
-
-	if err := t.minio.RemoveObject(ctx, userTweetsName, oldName, minio.RemoveObjectOptions{}); err != nil {
-		return err
-	}
-
-	return nil
-}
+//func (t *TweetMinio) UpdateTweetImage(ctx context.Context, oldName string, newName string) error {
+//	ctx, span := t.tracer.Start(ctx, "tweetMinio.UpdateTweetImage")
+//	defer span.End()
+//
+//	copyDestOpts := minio.CopyDestOptions{
+//		Bucket: userTweetsName,
+//		Object: newName,
+//	}
+//
+//	copySrcOpts := minio.CopySrcOptions{
+//		Bucket: userTweetsName,
+//		Object: oldName,
+//	}
+//
+//	if _, err := t.minio.CopyObject(ctx, copyDestOpts, copySrcOpts); err != nil {
+//		return err
+//	}
+//
+//	if err := t.minio.RemoveObject(ctx, userTweetsName, oldName, minio.RemoveObjectOptions{}); err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (t *TweetMinio) DeleteFile(ctx context.Context, fileName string) error {
+	ctx, span := t.tracer.Start(ctx, "tweetMinio.DeleteFile")
+	defer span.End()
+
 	if err := t.minio.RemoveObject(ctx, userTweetsName, fileName, minio.RemoveObjectOptions{}); err != nil {
 		return err
 	}

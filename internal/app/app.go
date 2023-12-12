@@ -35,7 +35,7 @@ func Run() {
 	redisRepo := redis.NewTweetsRedis(rdb, tracer.Tracer)
 
 	minioClient := minio.NewMinio(cfg)
-	minioRepo := minio.NewTweetMinio(minioClient)
+	minioRepo := minio.NewTweetMinio(minioClient, tracer.Tracer)
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor(
 		otelgrpc.WithTracerProvider(tracer.Provider),

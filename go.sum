@@ -10,6 +10,16 @@ github.com/Verce11o/yata-protos v0.0.0-20231210163859-82c492e0a3e0 h1:9GSdzdHiy7
 github.com/Verce11o/yata-protos v0.0.0-20231210163859-82c492e0a3e0/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
 github.com/Verce11o/yata-protos v0.0.0-20231210164223-7bcc37d20149 h1:2GTxbl7TxmSW2bh/LDYza4G3eBmPFIDDL8c4gOWC23Q=
 github.com/Verce11o/yata-protos v0.0.0-20231210164223-7bcc37d20149/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231212093935-59b746e41407 h1:ve/21Hznyt3n48d1EiE798VNmAUR8O/VYmi85v3W+cs=
+github.com/Verce11o/yata-protos v0.0.0-20231212093935-59b746e41407/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231212134238-1d8aff5db92f h1:8e8mHq4v/wWceiHjzPjb+4LE/OLGAy0WWSxiL5YBbRM=
+github.com/Verce11o/yata-protos v0.0.0-20231212134238-1d8aff5db92f/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231212180349-4723bcadbc27 h1:n1WcDZGyjVXOCKmgt8nDKHiP5UZl6/uSRo7neEDBTh0=
+github.com/Verce11o/yata-protos v0.0.0-20231212180349-4723bcadbc27/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231212180605-897409d52343 h1:N0DbH5MtJF6ztR4wszP790MEeVrYbCmHZUmJTdnRe00=
+github.com/Verce11o/yata-protos v0.0.0-20231212180605-897409d52343/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20231212182136-a02282d61eeb h1:WtYULkmFUd5IsCom+JPQfjLKvutydFrSpDt6gWcBH7c=
+github.com/Verce11o/yata-protos v0.0.0-20231212182136-a02282d61eeb/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=

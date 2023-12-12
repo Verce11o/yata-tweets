@@ -5,8 +5,15 @@ import (
 	"database/sql"
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata-tweets/internal/domain"
+	"github.com/Verce11o/yata-tweets/internal/lib/pagination"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
+	"time"
+)
+
+const (
+	paginationLimit = 2
 )
 
 type TweetPostgres struct {
@@ -18,13 +25,13 @@ func NewTweetPostgres(db *sqlx.DB, tracer trace.Tracer) *TweetPostgres {
 	return &TweetPostgres{db: db, tracer: tracer}
 }
 
-func (t *TweetPostgres) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest, imageName string) (string, error) {
+func (t *TweetPostgres) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest, imageName string, imageURL string) (string, error) {
 	ctx, span := t.tracer.Start(ctx, "tweetPostgres.CreateTweet")
 	defer span.End()
 
 	var tweetID string
 
-	q := "INSERT INTO tweets (user_id, text, image) VALUES ($1, $2, $3) RETURNING tweet_id"
+	q := "INSERT INTO tweets (user_id, text, image_name, image_temp_url) VALUES ($1, $2, $3, $4) RETURNING tweet_id"
 
 	stmt, err := t.db.PreparexContext(ctx, q)
 
@@ -32,7 +39,7 @@ func (t *TweetPostgres) CreateTweet(ctx context.Context, input *pb.CreateTweetRe
 		return "", err
 	}
 
-	err = stmt.QueryRowxContext(ctx, input.GetUserId(), input.GetText(), imageName).Scan(&tweetID)
+	err = stmt.QueryRowxContext(ctx, input.GetUserId(), input.GetText(), imageName, imageURL).Scan(&tweetID)
 
 	if err != nil {
 		return "", err
@@ -59,15 +66,64 @@ func (t *TweetPostgres) GetTweet(ctx context.Context, tweetID string) (*domain.T
 	return &tweet, nil
 }
 
-func (t *TweetPostgres) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest, imageName string) (*domain.Tweet, error) {
+func (t *TweetPostgres) GetAllTweets(ctx context.Context, cursor string) ([]*pb.Tweet, string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetPostgres.GetAllTweets")
+	defer span.End()
+
+	var createdAt time.Time
+	var tweetID uuid.UUID
+	var err error
+
+	if cursor != "" {
+		createdAt, tweetID, err = pagination.DecodeCursor(cursor)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	q := "SELECT * FROM tweets WHERE (created_at, tweet_id) > ($1, $2) ORDER BY created_at, tweet_id LIMIT $3"
+
+	rows, err := t.db.QueryxContext(ctx, q, createdAt, tweetID, paginationLimit)
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	var tweets []*pb.Tweet
+	var latestCreatedAt time.Time
+
+	for rows.Next() {
+		var item domain.Tweet
+		err = rows.StructScan(&item)
+		if err != nil {
+			return nil, "", err
+		}
+		tweets = append(tweets, &pb.Tweet{
+			UserId:   item.UserID.String(),
+			TweetId:  item.TweetID.String(),
+			Text:     item.Text,
+			ImageUrl: &item.ImageURL,
+		})
+		latestCreatedAt = item.CreatedAt
+	}
+
+	var nextCursor string
+	if len(tweets) > 0 {
+		nextCursor = pagination.EncodeCursor(latestCreatedAt, tweets[len(tweets)-1].TweetId)
+	}
+
+	return tweets, nextCursor, nil
+}
+
+func (t *TweetPostgres) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest, imageName string, imageURL string) (*domain.Tweet, error) {
 	ctx, span := t.tracer.Start(ctx, "tweetPostgres.UpdateTweet")
 	defer span.End()
 
 	var tweet domain.Tweet
 
-	q := "UPDATE tweets SET text = $1, image = $2, updated_at = CURRENT_TIMESTAMP WHERE tweet_id = $3 RETURNING *"
+	q := "UPDATE tweets SET text = $1, image_name = $2, image_temp_url = $3, updated_at = CURRENT_TIMESTAMP WHERE tweet_id = $4 RETURNING *"
 
-	if err := t.db.QueryRowxContext(ctx, q, input.GetText(), imageName, input.GetTweetId()).StructScan(&tweet); err != nil {
+	if err := t.db.QueryRowxContext(ctx, q, input.GetText(), imageName, imageURL, input.GetTweetId()).StructScan(&tweet); err != nil {
 		return nil, err
 	}
 
