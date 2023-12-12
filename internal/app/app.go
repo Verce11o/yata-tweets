@@ -6,10 +6,13 @@ import (
 	"github.com/Verce11o/yata-tweets/config"
 	tweetGrpc "github.com/Verce11o/yata-tweets/internal/handler/grpc"
 	"github.com/Verce11o/yata-tweets/internal/lib/logger"
+	"github.com/Verce11o/yata-tweets/internal/metrics/trace"
 	"github.com/Verce11o/yata-tweets/internal/repository/minio"
 	"github.com/Verce11o/yata-tweets/internal/repository/postgres"
 	"github.com/Verce11o/yata-tweets/internal/repository/redis"
 	"github.com/Verce11o/yata-tweets/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/propagation"
 	"google.golang.org/grpc"
 	"net"
 	"os"
@@ -21,21 +24,27 @@ func Run() {
 	log := logger.NewLogger()
 	cfg := config.LoadConfig()
 
+	//tracer := trace.InitTracer("Yata-Tweets")
+	tracer := trace.InitTracer("yata-tweets")
+
 	// Init repos
 	db := postgres.NewPostgres(cfg)
-	repo := postgres.NewTweetPostgres(db)
+	repo := postgres.NewTweetPostgres(db, tracer.Tracer)
 
 	rdb := redis.NewRedis(cfg)
-	redisRepo := redis.NewTweetsRedis(rdb)
+	redisRepo := redis.NewTweetsRedis(rdb, tracer.Tracer)
 
 	minioClient := minio.NewMinio(cfg)
 	minioRepo := minio.NewTweetMinio(minioClient)
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor(
+		otelgrpc.WithTracerProvider(tracer.Provider),
+		otelgrpc.WithPropagators(propagation.TraceContext{}),
+	)))
 
-	tweetService := service.NewTweetService(log, repo, redisRepo, minioRepo)
+	tweetService := service.NewTweetService(log, tracer.Tracer, repo, redisRepo, minioRepo)
 
-	pb.RegisterTweetsServer(s, tweetGrpc.NewTweetGRPC(log, tweetService))
+	pb.RegisterTweetsServer(s, tweetGrpc.NewTweetGRPC(log, tracer.Tracer, tweetService))
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.App.Port))
 

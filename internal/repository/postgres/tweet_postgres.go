@@ -6,17 +6,22 @@ import (
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata-tweets/internal/domain"
 	"github.com/jmoiron/sqlx"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type TweetPostgres struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	tracer trace.Tracer
 }
 
-func NewTweetPostgres(db *sqlx.DB) *TweetPostgres {
-	return &TweetPostgres{db: db}
+func NewTweetPostgres(db *sqlx.DB, tracer trace.Tracer) *TweetPostgres {
+	return &TweetPostgres{db: db, tracer: tracer}
 }
 
 func (t *TweetPostgres) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest, imageName string) (string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetPostgres.CreateTweet")
+	defer span.End()
+
 	var tweetID string
 
 	q := "INSERT INTO tweets (user_id, text, image) VALUES ($1, $2, $3) RETURNING tweet_id"
@@ -38,6 +43,9 @@ func (t *TweetPostgres) CreateTweet(ctx context.Context, input *pb.CreateTweetRe
 }
 
 func (t *TweetPostgres) GetTweet(ctx context.Context, tweetID string) (*domain.Tweet, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetPostgres.GetTweet")
+	defer span.End()
+
 	var tweet domain.Tweet
 
 	q := "SELECT * FROM tweets WHERE tweet_id = $1"
@@ -52,6 +60,9 @@ func (t *TweetPostgres) GetTweet(ctx context.Context, tweetID string) (*domain.T
 }
 
 func (t *TweetPostgres) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest, imageName string) (*domain.Tweet, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetPostgres.UpdateTweet")
+	defer span.End()
+
 	var tweet domain.Tweet
 
 	q := "UPDATE tweets SET text = $1, image = $2, updated_at = CURRENT_TIMESTAMP WHERE tweet_id = $3 RETURNING *"
@@ -65,6 +76,9 @@ func (t *TweetPostgres) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRe
 }
 
 func (t *TweetPostgres) DeleteTweet(ctx context.Context, tweetID string) error {
+	ctx, span := t.tracer.Start(ctx, "tweetPostgres.DeleteTweet")
+	defer span.End()
+
 	q := "DELETE FROM tweets WHERE tweet_id = $1"
 
 	res, err := t.db.ExecContext(ctx, q, tweetID)

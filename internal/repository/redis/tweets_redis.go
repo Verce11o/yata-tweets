@@ -8,6 +8,7 @@ import (
 	"github.com/Verce11o/yata-tweets/internal/domain"
 	"github.com/Verce11o/yata-tweets/internal/lib/grpc_errors"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel/trace"
 	"time"
 )
 
@@ -17,13 +18,17 @@ const (
 
 type TweetsRedis struct {
 	client *redis.Client
+	tracer trace.Tracer
 }
 
-func NewTweetsRedis(client *redis.Client) *TweetsRedis {
-	return &TweetsRedis{client: client}
+func NewTweetsRedis(client *redis.Client, tracer trace.Tracer) *TweetsRedis {
+	return &TweetsRedis{client: client, tracer: tracer}
 }
 
 func (r *TweetsRedis) GetTweetByIDCtx(ctx context.Context, tweetID string) (*domain.Tweet, error) {
+	ctx, span := r.tracer.Start(ctx, "tweetRedis.GetTweetByIDCtx")
+	defer span.End()
+
 	tweetBytes, err := r.client.Get(ctx, r.createKey(tweetID)).Bytes()
 
 	if err != nil {
@@ -43,6 +48,9 @@ func (r *TweetsRedis) GetTweetByIDCtx(ctx context.Context, tweetID string) (*dom
 }
 
 func (r *TweetsRedis) SetByIDCtx(ctx context.Context, tweetID string, tweet *domain.Tweet) error {
+	ctx, span := r.tracer.Start(ctx, "tweetRedis.SetByIDCtx")
+	defer span.End()
+
 	tweetBytes, err := json.Marshal(tweet)
 
 	if err != nil {
@@ -53,6 +61,9 @@ func (r *TweetsRedis) SetByIDCtx(ctx context.Context, tweetID string, tweet *dom
 }
 
 func (r *TweetsRedis) DeleteTweetByIDCtx(ctx context.Context, tweetID string) error {
+	ctx, span := r.tracer.Start(ctx, "tweetRedis.DeleteTweetByIDCtx")
+	defer span.End()
+
 	return r.client.Del(ctx, r.createKey(tweetID)).Err()
 }
 

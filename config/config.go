@@ -10,6 +10,7 @@ type Config struct {
 	Redis       RedisConfig    `yaml:"redis"`
 	App         App            `yaml:"app"`
 	MinioConfig MinioConfig    `yaml:"minio"`
+	Metrics     Metrics        `yaml:"metrics"`
 }
 
 type PostgresConfig struct {
@@ -33,6 +34,14 @@ type MinioConfig struct {
 	AccessKey string `yaml:"MinioAccessKey"`
 	SecretKey string `yaml:"MinioSecretKey"`
 	SSL       bool   `yaml:"UseSSL"`
+}
+
+type Metrics struct {
+	Jaeger Jaeger `yaml:"jaeger"`
+}
+
+type Jaeger struct {
+	Endpoint string `yaml:"endpoint"`
 }
 
 type App struct {

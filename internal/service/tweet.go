@@ -6,21 +6,26 @@ import (
 	"github.com/Verce11o/yata-tweets/internal/domain"
 	"github.com/Verce11o/yata-tweets/internal/lib/grpc_errors"
 	"github.com/Verce11o/yata-tweets/internal/repository"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
 type TweetService struct {
-	log   *zap.SugaredLogger
-	repo  repository.PostgresRepository
-	redis repository.RedisRepository
-	minio repository.MinioRepository
+	log    *zap.SugaredLogger
+	tracer trace.Tracer
+	repo   repository.PostgresRepository
+	redis  repository.RedisRepository
+	minio  repository.MinioRepository
 }
 
-func NewTweetService(log *zap.SugaredLogger, repo repository.PostgresRepository, redis repository.RedisRepository, minio repository.MinioRepository) *TweetService {
-	return &TweetService{log: log, repo: repo, redis: redis, minio: minio}
+func NewTweetService(log *zap.SugaredLogger, tracer trace.Tracer, repo repository.PostgresRepository, redis repository.RedisRepository, minio repository.MinioRepository) *TweetService {
+	return &TweetService{log: log, tracer: tracer, repo: repo, redis: redis, minio: minio}
 }
 
 func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest) (string, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetService.CreateTweet")
+	defer span.End()
+
 	image := input.GetImage()
 
 	if image != nil {
@@ -43,6 +48,9 @@ func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetReq
 }
 
 func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.Tweet, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetService.GetTweet")
+	defer span.End()
+
 	cachedTweet, err := t.redis.GetTweetByIDCtx(ctx, tweetID)
 
 	if err != nil {
@@ -70,6 +78,9 @@ func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.Twe
 }
 
 func (t *TweetService) GetTweetImage(ctx context.Context, imageName string) (*pb.Image, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetService.GetTweetImage")
+	defer span.End()
+
 	image, contentType, err := t.minio.GetTweetImage(ctx, imageName)
 
 	if err != nil {
@@ -85,6 +96,9 @@ func (t *TweetService) GetTweetImage(ctx context.Context, imageName string) (*pb
 }
 
 func (t *TweetService) UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest) (*domain.Tweet, error) {
+	ctx, span := t.tracer.Start(ctx, "tweetService.UpdateTweet")
+	defer span.End()
+
 	tweet, err := t.repo.GetTweet(ctx, input.GetTweetId())
 
 	if err != nil {
@@ -131,6 +145,9 @@ func (t *TweetService) UpdateTweet(ctx context.Context, input *pb.UpdateTweetReq
 }
 
 func (t *TweetService) DeleteTweet(ctx context.Context, input *pb.DeleteTweetRequest) error {
+	ctx, span := t.tracer.Start(ctx, "tweetService.DeleteTweet")
+	defer span.End()
+
 	tweet, err := t.repo.GetTweet(ctx, input.GetTweetId())
 
 	if err != nil {

@@ -18,6 +18,10 @@ minio:
   MinioSecretKey: minioadmin
   UseSSL: false
 
+metric:
+  jaeger:
+    endpoint: http://localhost:14268/api/traces
+
 app:
   port: 3999
 
