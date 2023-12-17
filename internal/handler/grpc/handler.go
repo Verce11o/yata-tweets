@@ -48,10 +48,9 @@ func (t *TweetGRPC) GetTweet(ctx context.Context, input *pb.GetTweetRequest) (*p
 	}
 
 	return &pb.Tweet{
-		UserId:   tweet.UserID.String(),
-		TweetId:  tweet.TweetID.String(),
-		Text:     tweet.Text,
-		ImageUrl: &tweet.ImageURL,
+		UserId:  tweet.UserID.String(),
+		TweetId: tweet.TweetID.String(),
+		Text:    tweet.Text,
 	}, nil
 
 }
@@ -82,10 +81,9 @@ func (t *TweetGRPC) UpdateTweet(ctx context.Context, input *pb.UpdateTweetReques
 	}
 
 	return &pb.Tweet{
-		UserId:   tweet.UserID.String(),
-		TweetId:  tweet.TweetID.String(),
-		Text:     tweet.Text,
-		ImageUrl: &tweet.ImageURL,
+		UserId:  tweet.UserID.String(),
+		TweetId: tweet.TweetID.String(),
+		Text:    tweet.Text,
 	}, nil
 
 }

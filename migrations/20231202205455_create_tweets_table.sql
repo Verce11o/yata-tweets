@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS "tweets" (
     user_id UUID NOT NULL,
     text VARCHAR(255) NOT NULL,
     image_name varchar(255) null,
-    image_temp_url text null ,
     created_at   TIMESTAMP WITH TIME ZONE    NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP WITH TIME ZONE             DEFAULT CURRENT_TIMESTAMP
 );

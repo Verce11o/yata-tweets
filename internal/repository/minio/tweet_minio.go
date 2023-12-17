@@ -6,7 +6,6 @@ import (
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/minio/minio-go/v7"
 	"go.opentelemetry.io/otel/trace"
-	"net/url"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func NewTweetMinio(minio *minio.Client, tracer trace.Tracer) *TweetMinio {
 	return &TweetMinio{minio: minio, tracer: tracer}
 }
 
-func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileName string) (string, error) {
+func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileName string) error {
 	ctx, span := t.tracer.Start(ctx, "tweetMinio.AddImage")
 	defer span.End()
 
@@ -39,56 +38,30 @@ func (t *TweetMinio) AddTweetImage(ctx context.Context, image *pb.Image, fileNam
 		minio.PutObjectOptions{ContentType: image.GetContentType()},
 	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	u, err := t.minio.PresignedGetObject(ctx, userTweetsName, fileName, imageExpireTime, url.Values{})
-
-	if err != nil {
-		return "", err
-	}
-
-	return u.String(), nil
+	return nil
 }
 
-// GetTweetImage returns image url on minio
-func (t *TweetMinio) GetTweetImage(ctx context.Context, fileName string) (string, error) {
-	ctx, span := t.tracer.Start(ctx, "tweetMinio.GetImage")
+func (t *TweetMinio) UpdateTweetImage(ctx context.Context, oldName string, newName string, image *pb.Image) error {
+	ctx, span := t.tracer.Start(ctx, "tweetMinio.UpdateCommentImage")
 	defer span.End()
 
-	u, err := t.minio.PresignedGetObject(ctx, userTweetsName, fileName, imageExpireTime, url.Values{})
+	err := t.DeleteFile(ctx, oldName)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return u.String(), nil
-}
+	err = t.AddTweetImage(ctx, image, newName)
 
-//func (t *TweetMinio) UpdateTweetImage(ctx context.Context, oldName string, newName string) error {
-//	ctx, span := t.tracer.Start(ctx, "tweetMinio.UpdateTweetImage")
-//	defer span.End()
-//
-//	copyDestOpts := minio.CopyDestOptions{
-//		Bucket: userTweetsName,
-//		Object: newName,
-//	}
-//
-//	copySrcOpts := minio.CopySrcOptions{
-//		Bucket: userTweetsName,
-//		Object: oldName,
-//	}
-//
-//	if _, err := t.minio.CopyObject(ctx, copyDestOpts, copySrcOpts); err != nil {
-//		return err
-//	}
-//
-//	if err := t.minio.RemoveObject(ctx, userTweetsName, oldName, minio.RemoveObjectOptions{}); err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (t *TweetMinio) DeleteFile(ctx context.Context, fileName string) error {
 	ctx, span := t.tracer.Start(ctx, "tweetMinio.DeleteFile")

@@ -13,16 +13,15 @@ type RedisRepository interface { // maybe refactor ?
 }
 
 type PostgresRepository interface {
-	CreateTweet(ctx context.Context, input *pb.CreateTweetRequest, imageName string, imageURL string) (string, error)
+	CreateTweet(ctx context.Context, input *pb.CreateTweetRequest, imageName string) (string, error)
 	GetTweet(ctx context.Context, tweetID string) (*domain.Tweet, error)
 	GetAllTweets(ctx context.Context, cursor string) ([]*pb.Tweet, string, error)
-	UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest, imageName string, imageURL string) (*domain.Tweet, error)
+	UpdateTweet(ctx context.Context, input *pb.UpdateTweetRequest, imageName string) (*domain.Tweet, error)
 	DeleteTweet(ctx context.Context, tweetID string) error
 }
 
 type MinioRepository interface {
-	AddTweetImage(ctx context.Context, image *pb.Image, fileName string) (string, error)
-	GetTweetImage(ctx context.Context, fileName string) (string, error)
-	//UpdateTweetImage(ctx context.Context, oldName string, newName string) error
+	AddTweetImage(ctx context.Context, image *pb.Image, fileName string) error
+	UpdateTweetImage(ctx context.Context, oldName string, newName string, image *pb.Image) error
 	DeleteFile(ctx context.Context, fileName string) error
 }
