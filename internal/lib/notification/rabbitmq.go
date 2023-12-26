@@ -1,9 +1,9 @@
-package email
+package notification
 
 import (
 	"context"
 )
 
-type EmailPublisher interface {
+type TweetPublisher interface {
 	Publish(ctx context.Context, message []byte) error
 }

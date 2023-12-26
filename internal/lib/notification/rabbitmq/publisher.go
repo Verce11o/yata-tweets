@@ -2,7 +2,7 @@ package rabbitmq
 
 import (
 	"context"
-	"github.com/Verce11o/yata-auth/config"
+	"github.com/Verce11o/yata-tweets/config"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel/trace"

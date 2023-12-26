@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	Postgres    PostgresConfig `yaml:"postgres"`
+	RabbitMQ    RabbitMQ       `yaml:"rabbitmq"`
 	Redis       RedisConfig    `yaml:"redis"`
 	App         App            `yaml:"app"`
 	MinioConfig MinioConfig    `yaml:"minio"`

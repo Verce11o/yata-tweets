@@ -6,6 +6,7 @@ import (
 	"github.com/Verce11o/yata-tweets/config"
 	tweetGrpc "github.com/Verce11o/yata-tweets/internal/handler/grpc"
 	"github.com/Verce11o/yata-tweets/internal/lib/logger"
+	"github.com/Verce11o/yata-tweets/internal/lib/notification/rabbitmq"
 	"github.com/Verce11o/yata-tweets/internal/metrics/trace"
 	"github.com/Verce11o/yata-tweets/internal/repository/minio"
 	"github.com/Verce11o/yata-tweets/internal/repository/postgres"
@@ -37,12 +38,16 @@ func Run() {
 	minioClient := minio.NewMinio(cfg)
 	minioRepo := minio.NewTweetMinio(minioClient, tracer.Tracer)
 
+	// Init broker
+
 	s := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor(
 		otelgrpc.WithTracerProvider(tracer.Provider),
 		otelgrpc.WithPropagators(propagation.TraceContext{}),
 	)))
 
-	tweetService := service.NewTweetService(log, tracer.Tracer, repo, redisRepo, minioRepo)
+	amqpConn := rabbitmq.NewAmqpConnection(cfg.RabbitMQ)
+	tweetPublisher := rabbitmq.NewTweetPublisher(amqpConn, log, tracer.Tracer, cfg.RabbitMQ)
+	tweetService := service.NewTweetService(log, tracer.Tracer, tweetPublisher, repo, redisRepo, minioRepo)
 
 	pb.RegisterTweetsServer(s, tweetGrpc.NewTweetGRPC(log, tracer.Tracer, tweetService))
 
