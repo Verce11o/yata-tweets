@@ -21,6 +21,17 @@ type PostgresConfig struct {
 	Name     string `yaml:"PostgresqlDbname" env:"POSTGRESQL_NAME"`
 }
 
+type RabbitMQ struct {
+	Username     string `yaml:"username" env-required:"true"`
+	Password     string `yaml:"password" env-required:"true"`
+	Host         string `yaml:"host" env-required:"true"`
+	Port         string `yaml:"port" env-required:"true"`
+	ExchangeName string `yaml:"exchangeName" env-required:"true"`
+	QueueName    string `yaml:"queueName" env-required:"true"`
+	ConsumerTag  string `yaml:"consumerTag" env-required:"true"`
+	BindingKey   string `yaml:"bindingKey" env-required:"true"`
+}
+
 type RedisConfig struct {
 	Host     string `yaml:"RedisHost" env:"REDISHOST"`
 	Port     string `yaml:"RedisPort" env:"REDISPORT"`

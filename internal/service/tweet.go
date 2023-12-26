@@ -2,24 +2,28 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata-tweets/internal/domain"
 	"github.com/Verce11o/yata-tweets/internal/lib/grpc_errors"
+	"github.com/Verce11o/yata-tweets/internal/lib/notification/rabbitmq"
 	"github.com/Verce11o/yata-tweets/internal/repository"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
 type TweetService struct {
-	log    *zap.SugaredLogger
-	tracer trace.Tracer
-	repo   repository.PostgresRepository
-	redis  repository.RedisRepository
-	minio  repository.MinioRepository
+	log            *zap.SugaredLogger
+	tracer         trace.Tracer
+	tweetPublisher rabbitmq.TweetPublisher
+	repo           repository.PostgresRepository
+	redis          repository.RedisRepository
+	minio          repository.MinioRepository
 }
 
-func NewTweetService(log *zap.SugaredLogger, tracer trace.Tracer, repo repository.PostgresRepository, redis repository.RedisRepository, minio repository.MinioRepository) *TweetService {
-	return &TweetService{log: log, tracer: tracer, repo: repo, redis: redis, minio: minio}
+func NewTweetService(log *zap.SugaredLogger, tracer trace.Tracer, tweetPublisher rabbitmq.TweetPublisher, repo repository.PostgresRepository, redis repository.RedisRepository, minio repository.MinioRepository) *TweetService {
+	return &TweetService{log: log, tracer: tracer, tweetPublisher: tweetPublisher, repo: repo, redis: redis, minio: minio}
 }
 
 func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetRequest) (string, error) {
@@ -41,6 +45,23 @@ func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetReq
 	}
 
 	tweetID, err := t.repo.CreateTweet(ctx, input, image.GetName())
+
+	if err != nil {
+		return "", err
+	}
+
+	SendNewTweetNotification := domain.SendNewTweetNotification{
+		FromUserID: input.GetUserId(),
+		ShortTitle: fmt.Sprintf("%v...", input.GetText()[:8]),
+	}
+
+	messageBytes, err := json.Marshal(SendNewTweetNotification)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = t.tweetPublisher.Publish(ctx, messageBytes)
 
 	if err != nil {
 		return "", err

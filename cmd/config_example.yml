@@ -12,6 +12,17 @@ redis:
   RedisPassword:
   RedisDB: 0
 
+rabbitmq:
+  username: vercello
+  password: vercello
+  host: localhost
+  port: 5672
+  exchangeName: tweets-exchange
+  queueName: tweets-queue
+  consumerTag: tweets-consumer
+  bindingKey: tweets-routing-key
+
+
 minio:
   Endpoint: 127.0.0.1:9000
   MinioAccessKey: minioadmin
