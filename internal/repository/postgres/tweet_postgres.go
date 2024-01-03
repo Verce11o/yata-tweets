@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
@@ -99,9 +100,10 @@ func (t *TweetPostgres) GetAllTweets(ctx context.Context, cursor string) ([]*pb.
 			return nil, "", err
 		}
 		tweets = append(tweets, &pb.Tweet{
-			UserId:  item.UserID.String(),
-			TweetId: item.TweetID.String(),
-			Text:    item.Text,
+			UserId:    item.UserID.String(),
+			TweetId:   item.TweetID.String(),
+			Text:      item.Text,
+			CreatedAt: timestamppb.New(item.CreatedAt),
 		})
 		latestCreatedAt = item.CreatedAt
 	}

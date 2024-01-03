@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/Verce11o/yata-auth v0.0.0-20231221154901-2db22dad592d
-	github.com/Verce11o/yata-protos v0.0.0-20231220164004-590136afa0aa
+	github.com/Verce11o/yata-protos v0.0.0-20240102145956-f1373834f4b9
 	github.com/google/uuid v1.4.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.3.5

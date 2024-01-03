@@ -8,6 +8,8 @@ github.com/Verce11o/yata-auth v0.0.0-20231221154901-2db22dad592d h1:IMCW1FI/KEeh
 github.com/Verce11o/yata-auth v0.0.0-20231221154901-2db22dad592d/go.mod h1:1dBprsEWvHW3J44d4FzHVC6W43PENF6vCAGlXxoKT38=
 github.com/Verce11o/yata-protos v0.0.0-20231220164004-590136afa0aa h1:oPMDPsvGi8UvZ65dTJph8xamnRHKpN/SIETQE7MJQDo=
 github.com/Verce11o/yata-protos v0.0.0-20231220164004-590136afa0aa/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
+github.com/Verce11o/yata-protos v0.0.0-20240102145956-f1373834f4b9 h1:2BJqbYPHo/XGmqkPkDVrsSJ3S+rscvnTZsafyi1ufIU=
+github.com/Verce11o/yata-protos v0.0.0-20240102145956-f1373834f4b9/go.mod h1:jJmuZ7WZnP0vh+yQCAjYw5m53N/m6rL2tYl+sFtFXiI=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=

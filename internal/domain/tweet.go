@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	NewTweetNotificationType = "tweet"
+)
+
 type Tweet struct {
 	TweetID   uuid.UUID `json:"tweet_id" db:"tweet_id"`
 	UserID    uuid.UUID `json:"user_id" db:"user_id"`
@@ -15,6 +19,6 @@ type Tweet struct {
 }
 
 type SendNewTweetNotification struct {
-	FromUserID string `json:"from_user_id"`
-	ShortTitle string `json:"short_title"`
+	SenderID string `json:"sender_id"`
+	Type     string `json:"type"`
 }

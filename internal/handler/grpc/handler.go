@@ -7,6 +7,7 @@ import (
 	"github.com/Verce11o/yata-tweets/internal/service"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"go.uber.org/zap"
 )
@@ -48,9 +49,10 @@ func (t *TweetGRPC) GetTweet(ctx context.Context, input *pb.GetTweetRequest) (*p
 	}
 
 	return &pb.Tweet{
-		UserId:  tweet.UserID.String(),
-		TweetId: tweet.TweetID.String(),
-		Text:    tweet.Text,
+		UserId:    tweet.UserID.String(),
+		TweetId:   tweet.TweetID.String(),
+		Text:      tweet.Text,
+		CreatedAt: timestamppb.New(tweet.CreatedAt),
 	}, nil
 
 }

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	pb "github.com/Verce11o/yata-protos/gen/go/tweets"
 	"github.com/Verce11o/yata-tweets/internal/domain"
 	"github.com/Verce11o/yata-tweets/internal/lib/grpc_errors"
@@ -51,8 +50,8 @@ func (t *TweetService) CreateTweet(ctx context.Context, input *pb.CreateTweetReq
 	}
 
 	SendNewTweetNotification := domain.SendNewTweetNotification{
-		FromUserID: input.GetUserId(),
-		ShortTitle: fmt.Sprintf("%v...", input.GetText()[:8]),
+		SenderID: input.GetUserId(),
+		Type:     domain.NewTweetNotificationType,
 	}
 
 	messageBytes, err := json.Marshal(SendNewTweetNotification)
@@ -86,7 +85,7 @@ func (t *TweetService) GetTweet(ctx context.Context, tweetID string) (domain.Twe
 	}
 
 	tweet, err := t.repo.GetTweet(ctx, tweetID)
-
+	t.log.Debugf("tweet: %v", tweet)
 	if err != nil {
 		t.log.Errorf("cannot get tweet by id in postgres: %v", err.Error())
 		return domain.Tweet{}, err
@@ -184,7 +183,7 @@ func (t *TweetService) DeleteTweet(ctx context.Context, input *pb.DeleteTweetReq
 	}
 
 	if err := t.redis.DeleteTweetByIDCtx(ctx, tweet.TweetID.String()); err != nil {
-		t.log.Errorf("cannot delete tweet by id in redis: ", err.Error())
+		t.log.Errorf("cannot delete tweet by id in redis: %v", err.Error())
 	}
 
 	return nil
