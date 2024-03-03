@@ -6,7 +6,7 @@ import (
 	"github.com/Verce11o/yata-tweets/internal/domain"
 )
 
-type RedisRepository interface { // maybe refactor ?
+type RedisRepository interface {
 	GetTweetByIDCtx(ctx context.Context, key string) (*domain.Tweet, error)
 	SetByIDCtx(ctx context.Context, tweetID string, tweet *domain.Tweet) error
 	DeleteTweetByIDCtx(ctx context.Context, tweetID string) error

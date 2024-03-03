@@ -25,7 +25,6 @@ func Run() {
 	log := logger.NewLogger()
 	cfg := config.LoadConfig()
 
-	//tracer := trace.InitTracer("Yata-Tweets")
 	tracer := trace.InitTracer("yata-tweets")
 
 	// Init repos
